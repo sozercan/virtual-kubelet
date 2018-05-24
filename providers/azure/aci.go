@@ -147,6 +147,14 @@ func NewACIProvider(config string, rm *manager.ResourceManager, nodeName, operat
 		azAuth.SubscriptionID = subscriptionID
 	}
 
+	useManagedIdentityExtensionFromEnv := os.Getenv("ARM_USE_MANAGED_IDENTITY_EXTENSION")
+	if len(useManagedIdentityExtensionFromEnv) > 0 {
+		cfg.UseManagedIdentityExtension, err = strconv.ParseBool(useManagedIdentityExtensionFromEnv)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	p.aciClient, err = aci.NewClient(azAuth)
 	if err != nil {
 		return nil, err

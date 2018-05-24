@@ -13,21 +13,22 @@ import (
 
 // Authentication represents the authentication file for Azure.
 type Authentication struct {
-	ClientID                string `json:"clientId,omitempty"`
-	ClientSecret            string `json:"clientSecret,omitempty"`
-	SubscriptionID          string `json:"subscriptionId,omitempty"`
-	TenantID                string `json:"tenantId,omitempty"`
-	ActiveDirectoryEndpoint string `json:"activeDirectoryEndpointUrl,omitempty"`
-	ResourceManagerEndpoint string `json:"resourceManagerEndpointUrl,omitempty"`
-	GraphResourceID         string `json:"activeDirectoryGraphResourceId,omitempty"`
-	SQLManagementEndpoint   string `json:"sqlManagementEndpointUrl,omitempty"`
-	GalleryEndpoint         string `json:"galleryEndpointUrl,omitempty"`
-	ManagementEndpoint      string `json:"managementEndpointUrl,omitempty"`
+	ClientID                    string `json:"clientId,omitempty"`
+	ClientSecret                string `json:"clientSecret,omitempty"`
+	SubscriptionID              string `json:"subscriptionId,omitempty"`
+	TenantID                    string `json:"tenantId,omitempty"`
+	ActiveDirectoryEndpoint     string `json:"activeDirectoryEndpointUrl,omitempty"`
+	ResourceManagerEndpoint     string `json:"resourceManagerEndpointUrl,omitempty"`
+	GraphResourceID             string `json:"activeDirectoryGraphResourceId,omitempty"`
+	SQLManagementEndpoint       string `json:"sqlManagementEndpointUrl,omitempty"`
+	GalleryEndpoint             string `json:"galleryEndpointUrl,omitempty"`
+	ManagementEndpoint          string `json:"managementEndpointUrl,omitempty"`
+	UseManagedIdentityExtension string `json:"useManagedIdentityExtension,omitempty"`
 }
 
 // NewAuthentication returns an authentication struct from user provided
 // credentials.
-func NewAuthentication(azureCloud, clientID, clientSecret, subscriptionID, tenantID string) *Authentication {
+func NewAuthentication(azureCloud, clientID, clientSecret, subscriptionID, tenantID, useManagedIdentityExtension string) *Authentication {
 	environment := PublicCloud
 
 	switch azureCloud {
@@ -46,16 +47,17 @@ func NewAuthentication(azureCloud, clientID, clientSecret, subscriptionID, tenan
 	}
 
 	return &Authentication{
-		ClientID:                clientID,
-		ClientSecret:            clientSecret,
-		SubscriptionID:          subscriptionID,
-		TenantID:                tenantID,
-		ActiveDirectoryEndpoint: environment.ActiveDirectoryEndpoint,
-		ResourceManagerEndpoint: environment.ResourceManagerEndpoint,
-		GraphResourceID:         environment.GraphEndpoint,
-		SQLManagementEndpoint:   environment.SQLDatabaseDNSSuffix,
-		GalleryEndpoint:         environment.GalleryEndpoint,
-		ManagementEndpoint:      environment.ServiceManagementEndpoint,
+		ClientID:                    clientID,
+		ClientSecret:                clientSecret,
+		SubscriptionID:              subscriptionID,
+		TenantID:                    tenantID,
+		ActiveDirectoryEndpoint:     environment.ActiveDirectoryEndpoint,
+		ResourceManagerEndpoint:     environment.ResourceManagerEndpoint,
+		GraphResourceID:             environment.GraphEndpoint,
+		SQLManagementEndpoint:       environment.SQLDatabaseDNSSuffix,
+		GalleryEndpoint:             environment.GalleryEndpoint,
+		ManagementEndpoint:          environment.ServiceManagementEndpoint,
+		UseManagedIdentityExtension: useManagedIdentityExtension,
 	}
 }
 

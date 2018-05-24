@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/Azure/go-autorest/autorest/adal"
+	"github.com/golang/glog"
 )
 
 // Client represents authentication details and cloud specific parameters for
@@ -29,25 +31,61 @@ type userAgentTransport struct {
 	client    *Client
 }
 
+// newServicePrincipalTokenFromCredentials creates a new ServicePrincipalToken using values of the
+// passed credentials map.
+func newServicePrincipalTokenFromCredentials(auth *Authentication) (*adal.ServicePrincipalToken, error) {
+	oauthConfig, err := adal.NewOAuthConfig(auth.ActiveDirectoryEndpoint, auth.TenantID)
+	if err != nil {
+		return nil, fmt.Errorf("creating the OAuth config: %v", err)
+	}
+
+	var useManagedIdentityExtension bool
+	if len(auth.UseManagedIdentityExtension) > 0 {
+		useManagedIdentityExtension, err = strconv.ParseBool(auth.UseManagedIdentityExtension)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if useManagedIdentityExtension {
+		glog.V(2).Infoln("azure: using managed identity extension to retrieve access token")
+		msiEndpoint, err := adal.GetMSIVMEndpoint()
+		if err != nil {
+			return nil, fmt.Errorf("Getting the managed service identity endpoint: %v", err)
+		}
+		return adal.NewServicePrincipalTokenFromMSI(
+			msiEndpoint,
+			auth.ResourceManagerEndpoint)
+	}
+
+	if len(auth.ClientSecret) > 0 {
+		glog.V(2).Infoln("azure: using client_id+client_secret to retrieve access token")
+		return adal.NewServicePrincipalToken(
+			*oauthConfig,
+			auth.ClientID,
+			auth.ClientSecret,
+			auth.ResourceManagerEndpoint)
+	}
+
+	return nil, fmt.Errorf("No credentials provided for AAD application %s", auth.ClientID)
+}
+
 // NewClient creates a new Azure API client from an Authentication struct and BaseURI.
 func NewClient(auth *Authentication, baseURI string, userAgent string) (*Client, error) {
+
+	tp, err := newServicePrincipalTokenFromCredentials(auth)
+	if err != nil {
+		return nil, err
+	}
+
 	resource, err := getResourceForToken(auth, baseURI)
 	if err != nil {
 		return nil, fmt.Errorf("Getting resource for token failed: %v", err)
 	}
+
 	client := &Client{
 		Authentication: auth,
 		BaseURI:        resource,
-	}
-
-	config, err := adal.NewOAuthConfig(auth.ActiveDirectoryEndpoint, auth.TenantID)
-	if err != nil {
-		return nil, fmt.Errorf("Creating new OAuth config for active directory failed: %v", err)
-	}
-
-	tp, err := adal.NewServicePrincipalToken(*config, auth.ClientID, auth.ClientSecret, resource)
-	if err != nil {
-		return nil, fmt.Errorf("Creating new service principal token failed: %v", err)
 	}
 
 	client.BearerAuthorizer = &BearerAuthorizer{tokenProvider: tp}

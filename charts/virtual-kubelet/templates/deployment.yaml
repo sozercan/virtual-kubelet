@@ -33,12 +33,29 @@ spec:
         volumeMounts:
         - name: credentials
           mountPath: "/etc/virtual-kubelet"
+        {{ if .Values.env.useManagedIdentity }}
+        - mountPath: /etc/ssl/certs/ca-certificates.crt
+          name: ssl-certs
+          readOnly: true
+        - mountPath: /var/lib/waagent/
+          name: waagent
+          readOnly: true
+        {{ end }}
         command: ["virtual-kubelet"]
         args: ["--provider", "azure", "--namespace", "default", "--nodename", {{ default "virtual-kubelet" .Values.env.nodeName | quote }} , "--os", {{ default "Linux" .Values.env.nodeOsType | quote }}, "--taint", {{ default "azure.com/aci" .Values.env.nodeTaint | quote }}]
       volumes:
       - name: credentials
         secret:
           secretName: {{ template "fullname" . }}
+      {{ if .Values.env.useManagedIdentity }}
+      - hostPath:
+          path: /etc/ssl/certs/ca-certificates.crt
+          type: ""
+        name: ssl-certs
+      - hostPath:
+          path: /var/lib/waagent/
+        name: waagent
+      {{ end }}
       serviceAccountName: {{ if .Values.rbac.install }} "{{ template "fullname" . }}-service-account" {{ end }}
       nodeSelector:
         beta.kubernetes.io/os: linux

@@ -1,23 +1,24 @@
 image:
-  repository: microsoft/virtual-kubelet
-  tag: latest
+  repository: sozercan/virtual-kubelet
+  tag: v0.3-4-g237c8f28
   pullPolicy: Always
 env:
-  azureClientId: 
-  azureClientKey: 
-  azureTenantId: 
-  azureSubscriptionId: 
-  aciResourceGroup: 
-  aciRegion: 
-  nodeName: 
-  nodeTaint: 
-  nodeOsType: 
-  apiserverCert: 
-  apiserverKey: 
+  azureClientId:
+  azureClientKey:
+  azureTenantId:
+  azureSubscriptionId:
+  aciResourceGroup: sertac-k8s-vmss-autoscaler
+  aciRegion: eastus
+  nodeName: aci-connector
+  nodeTaint: azure.com/aci
+  nodeOsType: Linux
+  apiserverCert:
+  apiserverKey:
+  useManagedIdentity: true
 
 # Install Default RBAC roles and bindings
 rbac:
-  install: false
+  install: true
   serviceAccountName: virtual-kubelet
   # RBAC api version (currently v1beta1)
   apiVersion: v1beta1
